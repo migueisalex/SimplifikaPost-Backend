@@ -75,6 +75,15 @@ try {
         handleDeletePost($matches[1]);
     }
     
+    // Rotas de Grupos de Hashtags
+    elseif ($path === 'hashtag-groups' && $method === 'GET') {
+        handleListHashtagGroups();
+    } elseif ($path === 'hashtag-groups' && $method === 'POST') {
+        handleCreateHashtagGroup();
+    } elseif (preg_match('/^hashtag-groups\/(\d+)$/', $path, $matches) && $method === 'DELETE') {
+        handleDeleteHashtagGroup($matches[1]);
+    }
+    
     // Rotas de Contas Conectadas
     elseif ($path === 'accounts' && $method === 'GET') {
         handleListAccounts();
@@ -316,6 +325,75 @@ function handleDeletePost($postId) {
     
     echo json_encode(['success' => true]);
 }
+
+// ========================================
+// HANDLERS DE GRUPOS DE HASHTAGS
+// ========================================
+
+function handleListHashtagGroups() {
+    Auth::requireAuth();
+    
+    $user = Auth::getAuthenticatedUser();
+    $db = Database::getInstance();
+    
+    $groups = $db->fetchAll(
+        'SELECT id, name, hashtags FROM hashtag_groups WHERE user_id = ? ORDER BY name ASC',
+        [$user['sub']]
+    );
+    
+    echo json_encode([
+        'success' => true,
+        'hashtagGroups' => $groups,
+    ]);
+}
+
+function handleCreateHashtagGroup() {
+    Auth::requireAuth();
+    
+    $user = Auth::getAuthenticatedUser();
+    $data = json_decode(file_get_contents('php://input'), true);
+    
+    if (!isset($data['name']) || !isset($data['hashtags'])) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Nome e hashtags são obrigatórios']);
+        return;
+    }
+    
+    $db = Database::getInstance();
+    
+    $groupId = $db->insert('hashtag_groups', [
+        'user_id' => $user['sub'],
+        'name' => $data['name'],
+        'hashtags' => $data['hashtags'],
+        'created_at' => date('Y-m-d H:i:s'),
+    ]);
+    
+    echo json_encode([
+        'success' => true,
+        'group_id' => $groupId,
+    ]);
+}
+
+function handleDeleteHashtagGroup($groupId) {
+    Auth::requireAuth();
+    
+    $user = Auth::getAuthenticatedUser();
+    $db = Database::getInstance();
+    
+    // Verifica se o grupo pertence ao usuário
+    $group = $db->fetchOne('SELECT id FROM hashtag_groups WHERE id = ? AND user_id = ?', [$groupId, $user['sub']]);
+    
+    if (!$group) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Grupo de hashtag não encontrado']);
+        return;
+    }
+    
+    $db->delete('hashtag_groups', 'id = ?', [$groupId]);
+    
+    echo json_encode(['success' => true]);
+}
+
 
 // ========================================
 // HANDLERS DE OAUTH
