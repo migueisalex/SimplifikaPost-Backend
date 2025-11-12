@@ -209,7 +209,7 @@ export class PostController {
         data: {
           userId,
           content: originalPost.content,
-          platforms: originalPost.platforms,
+          platforms: originalPost.platforms as any,
           scheduledAt: new Date(), // Agenda para agora
           postType: originalPost.postType,
           status: PostStatus.scheduled,

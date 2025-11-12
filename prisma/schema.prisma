@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -103,7 +103,7 @@ model Post {
   id            String      @id @default(uuid())
   userId        String
   content       String      @db.Text
-  platforms     String[]
+  platforms     Json
   scheduledAt   DateTime
   status        PostStatus  @default(scheduled)
   postType      PostType
