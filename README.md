@@ -1,246 +1,193 @@
-# Simplifika Post - Backend em PHP
+# SimplifikaPost Backend
 
-Sistema completo de agendamento de posts para redes sociais (Facebook, Instagram, YouTube e TikTok) desenvolvido em PHP para servidor compartilhado.
+Backend API para o SimplifikaPost - Plataforma de gerenciamento e agendamento de posts para redes sociais.
 
-## 📋 Requisitos
+## 📋 Versão
 
-- PHP 7.4+
-- MySQL 5.7+ ou MariaDB 10.2+
-- Extensões PHP: curl, json, pdo_mysql
-- Acesso SSH (recomendado)
-- Cronjob disponível
+**1.1.0** - Implementação completa conforme especificação técnica de 19/07/2024
 
-## 🚀 Instalação Rápida
+## 🚀 Tecnologias
 
-### 1. Preparar o Banco de Dados
+- **Node.js** com **TypeScript**
+- **Express.js** - Framework web
+- **Prisma** - ORM para PostgreSQL
+- **PostgreSQL** - Banco de dados relacional
+- **JWT** - Autenticação
+- **bcrypt** - Hashing de senhas
+- **AWS S3** - Armazenamento de mídia
+- **Google Gemini AI** - Geração de conteúdo
+- **Nodemailer** - Envio de emails
+- **node-cron** - Tarefas agendadas
 
+## 📦 Instalação
+
+### Pré-requisitos
+
+- Node.js 18+ 
+- PostgreSQL 14+
+- pnpm (gerenciador de pacotes)
+
+### Passos
+
+1. Clone o repositório:
 ```bash
-mysql -u seu_usuario -p < schema.sql
+git clone https://github.com/migueisalex/SimplifikaPost-Backend.git
+cd SimplifikaPost-Backend
 ```
 
-### 2. Fazer Upload dos Arquivos
-
-Faça upload de todos os arquivos PHP para seu servidor via FTP/SFTP:
-
-```
-seu-dominio.com/
-├── api/
-│   ├── config.php
-│   ├── Database.php
-│   ├── Auth.php
-│   ├── OAuthMeta.php
-│   ├── OAuthYouTube.php
-│   ├── index.php
-│   ├── cron.php
-│   └── .env
+2. Instale as dependências:
+```bash
+pnpm install
 ```
 
-### 3. Configurar Variáveis de Ambiente
-
-Copie `.env.example` para `.env` e preencha com suas informações:
-
+3. Configure as variáveis de ambiente:
 ```bash
 cp .env.example .env
+# Edite o arquivo .env com suas configurações
 ```
 
-Edite o arquivo `.env` com suas credenciais:
-
-```
-DB_HOST=localhost
-DB_USER=seu_usuario
-DB_PASS=sua_senha
-DB_NAME=simplifika_post
-
-JWT_SECRET=sua_chave_secreta_aqui
-META_APP_ID=seu_app_id
-META_APP_SECRET=seu_app_secret
-YOUTUBE_CLIENT_ID=seu_client_id
-YOUTUBE_CLIENT_SECRET=seu_client_secret
+4. Execute as migrações do banco de dados:
+```bash
+pnpm prisma:migrate
 ```
 
-### 4. Configurar Cronjob
-
-Acesse o painel de controle do seu servidor (cPanel, Plesk, etc.) e adicione um novo Cronjob:
-
-**Comando:**
-```
-* * * * * /usr/bin/php /caminho/para/cron.php
+5. Gere o Prisma Client:
+```bash
+pnpm prisma:generate
 ```
 
-**Frequência:** A cada minuto
-
-Isso fará com que posts agendados sejam publicados automaticamente no horário correto.
-
-## 📚 Estrutura de Arquivos
-
-```
-simplifika-post-backend/
-├── config.php          # Configurações principais
-├── Database.php        # Classe de conexão com MySQL
-├── Auth.php            # Autenticação com JWT
-├── OAuthMeta.php       # OAuth com Facebook/Instagram
-├── OAuthYouTube.php    # OAuth com YouTube
-├── index.php           # Roteador principal da API
-├── cron.php            # Script de agendamento
-├── schema.sql          # Schema do banco de dados
-├── .env.example        # Variáveis de ambiente (modelo)
-└── README.md           # Este arquivo
+6. Inicie o servidor em modo de desenvolvimento:
+```bash
+pnpm dev
 ```
 
-## 🔌 Endpoints da API
+## 🗄️ Estrutura do Banco de Dados
 
-### Autenticação
+### Tabelas Principais
 
-- `POST /api/auth/register` - Registrar novo usuário
-- `POST /api/auth/login` - Fazer login
-- `GET /api/auth/me` - Obter usuário autenticado
-- `POST /api/auth/logout` - Fazer logout
-
-### Perfil
-
-- `GET /api/profile` - Obter perfil do usuário
-- `PUT /api/profile` - Atualizar perfil
-
-### Posts
-
-- `GET /api/posts` - Listar posts do usuário
-- `POST /api/posts` - Criar novo post
-- `PUT /api/posts/{id}` - Atualizar post
-- `DELETE /api/posts/{id}` - Deletar post
-
-### Contas Conectadas
-
-- `GET /api/accounts` - Listar contas conectadas
-- `GET /api/oauth/meta/authorize` - Autorizar com Meta
-- `GET /api/oauth/meta/callback` - Callback do Meta
-- `GET /api/oauth/youtube/authorize` - Autorizar com YouTube
-- `GET /api/oauth/youtube/callback` - Callback do YouTube
+- **users** - Usuários do sistema
+- **subscriptions** - Assinaturas e planos
+- **usage_trackers** - Rastreamento de uso mensal
+- **posts** - Posts agendados
+- **media_items** - Arquivos de mídia dos posts
+- **hashtag_groups** - Grupos de hashtags salvos
+- **staff_members** - Membros da equipe (admin/financeiro)
+- **audit_logs** - Logs de auditoria
 
 ## 🔐 Autenticação
 
-A API usa JWT (JSON Web Tokens) para autenticação. Inclua o token no header:
+A API usa **JWT (JSON Web Tokens)** para autenticação. Todos os endpoints (exceto `/auth/*`) requerem o header:
 
 ```
-Authorization: Bearer seu_token_aqui
+Authorization: Bearer <token>
 ```
 
-## 📝 Exemplo de Uso
+## 📡 Endpoints Principais
 
-### Registrar Usuário
+### Autenticação
+- `POST /api/auth/register` - Registrar novo usuário
+- `POST /api/auth/verify-email` - Verificar código de email
+- `POST /api/auth/login` - Login (usuário ou staff)
+
+### Posts
+- `GET /api/posts` - Listar posts do usuário
+- `POST /api/posts` - Criar novo post
+- `PUT /api/posts/:id` - Atualizar post
+- `DELETE /api/posts/:id` - Deletar post
+- `POST /api/posts/:id/clone` - Clonar post
+
+### Mídia
+- `POST /api/media/upload` - Upload de arquivo (multipart/form-data)
+
+### IA (Gemini)
+- `POST /api/ai/generate-text` - Gerar texto com IA
+- `POST /api/ai/generate-image` - Gerar imagem com IA
+
+### Assinaturas
+- `GET /api/subscriptions` - Obter assinatura atual
+- `PUT /api/subscriptions` - Atualizar assinatura
+- `POST /api/subscriptions/downgrade` - Downgrade para Freemium
+
+## 🎯 Lógica de Negócio
+
+### Sistema de Limites (Usage Tracker)
+
+O sistema controla o uso mensal baseado no plano:
+
+| Plano | Posts | IA Texto | IA Imagem |
+|-------|-------|----------|-----------|
+| Freemium (0) | 10 | 5 | 3 |
+| Pacote 1 | 50 | 30 | 20 |
+| Pacote 2 | 150 | 100 | 75 |
+| Pacote 3 | Ilimitado | Ilimitado | Ilimitado |
+
+### Inadimplência
+
+1. Gateway de pagamento notifica falha via webhook
+2. Status do usuário → `Inadimplente`
+3. Plano tratado como Freemium por 30 dias
+4. Após 30 dias → Status `Bloqueado`
+5. Bloqueado: apenas endpoints de pagamento funcionam
+
+### Downgrade Voluntário
+
+1. Usuário solicita downgrade
+2. Mantém 5 primeiros posts agendados
+3. Restantes → status `inativo_por_downgrade`
+4. Email de notificação enviado
+5. Posts inativos deletados após 30 dias
+
+### Cron Jobs (Diários às 2h)
+
+- Bloqueia usuários inadimplentes há mais de 30 dias
+- Deleta posts publicados há mais de 90 dias
+- Deleta posts inativos por downgrade há mais de 30 dias
+- Envia avisos de exclusão 7 dias antes
+
+## 🔧 Scripts Disponíveis
 
 ```bash
-curl -X POST https://seu-dominio.com/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "usuario@exemplo.com",
-    "password": "senha123",
-    "name": "Seu Nome"
-  }'
+pnpm dev              # Inicia servidor em modo desenvolvimento
+pnpm build            # Compila TypeScript para JavaScript
+pnpm start            # Inicia servidor em produção
+pnpm prisma:generate  # Gera Prisma Client
+pnpm prisma:migrate   # Executa migrações
+pnpm prisma:deploy    # Deploy de migrações em produção
 ```
 
-### Criar Post
+## 🛡️ Segurança
 
-```bash
-curl -X POST https://seu-dominio.com/api/posts \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer seu_token" \
-  -d '{
-    "content": "Meu primeiro post!",
-    "platforms": ["facebook", "instagram"],
-    "scheduled_at": "2024-12-31 14:30:00",
-    "post_type": "feed"
-  }'
-```
+- Senhas hasheadas com **bcrypt**
+- Chaves de API criptografadas com **AES-256-CBC**
+- Autenticação via **JWT**
+- Validação de entrada em todos os endpoints
+- Logs de auditoria para ações críticas
+- CORS configurado
 
-## 🔄 Fluxo de OAuth
+## 📝 Variáveis de Ambiente
 
-### 1. Autorizar com Meta (Facebook/Instagram)
+Veja `.env.example` para a lista completa de variáveis necessárias.
 
-Redirecione o usuário para:
-```
-https://seu-dominio.com/api/oauth/meta/authorize
-```
+## 🤝 Contribuindo
 
-### 2. Meta redireciona de volta com código
-
-Seu backend troca o código por um access token e armazena no banco.
-
-### 3. Publicar no Facebook/Instagram
-
-Quando um post é agendado, o cron job publica automaticamente usando o token armazenado.
-
-## 🐛 Troubleshooting
-
-### Erro: "Cannot find module"
-
-Verifique se todos os arquivos PHP estão no diretório correto.
-
-### Erro: "Access denied for user"
-
-Verifique as credenciais do MySQL no arquivo `.env`.
-
-### Posts não estão sendo publicados
-
-1. Verifique se o Cronjob está configurado corretamente
-2. Verifique os logs: `tail -f /var/log/cron`
-3. Teste o cron manualmente: `/usr/bin/php /caminho/para/cron.php`
-
-### Erro de OAuth
-
-1. Verifique se o App ID e Secret estão corretos
-2. Verifique se a URL de callback está configurada no painel de desenvolvedor
-3. Verifique se o servidor está em HTTPS
-
-## 📊 Estrutura do Banco de Dados
-
-### Tabela: users
-- id, email, password, name, role, created_at, updated_at
-
-### Tabela: user_profiles
-- id, user_id, full_name, birth_date, cpf, cep, address, etc.
-
-### Tabela: connected_accounts
-- id, user_id, platform, account_id, account_name, access_token, refresh_token, token_expiry
-
-### Tabela: posts
-- id, user_id, content, platforms, scheduled_at, status, post_type, media_urls, error_message
-
-### Tabela: hashtag_groups
-- id, user_id, name, hashtags
-
-### Tabela: publication_logs
-- id, post_id, platform, status, response_data, error_message
-
-## 🔒 Segurança
-
-- Senhas são hasheadas com bcrypt
-- JWT tokens expiram em 7 dias
-- CORS está configurado para domínios permitidos
-- Todas as queries usam prepared statements
-- Validação de input em todos os endpoints
-
-## 📈 Performance
-
-- Índices no banco de dados para queries rápidas
-- Conexão PDO com prepared statements
-- Caching de sessão
-- Rate limiting (opcional)
-
-## 🚢 Deploy em Produção
-
-1. Mude `APP_ENV` para `production`
-2. Mude `APP_DEBUG` para `false`
-3. Gere uma chave JWT_SECRET segura
-4. Configure HTTPS/SSL
-5. Configure Cronjob
-6. Faça backup do banco de dados
-
-## 📞 Suporte
-
-Para dúvidas ou problemas, consulte:
-- Documentação das APIs: [Meta Graph API](https://developers.facebook.com/docs/graph-api), [YouTube Data API](https://developers.google.com/youtube/v3)
-- Logs do servidor: `/var/log/php-errors.log`
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
 
 ## 📄 Licença
 
-Desenvolvido por Manus AI - 2024
+Este projeto está sob a licença ISC.
+
+## 👥 Equipe
+
+SimplifikaPost Team
+
+## 📞 Suporte
+
+Para suporte, entre em contato através do email: suporte@simplifikapost.com
+
+---
+
+**Nota:** O README anterior em PHP foi movido para `README_PHP_OLD.md` para referência.
